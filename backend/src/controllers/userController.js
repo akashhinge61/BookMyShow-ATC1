@@ -63,17 +63,34 @@ export async function getUserPreferences(req, res) {
 export async function updateUserPreferences(req, res) {
   try {
     const userId = req.headers['x-user-id'] || 'guest-test-user-id';
-    const { favoriteCategories, preferredLanguages, preferredCities, budgetPreference, timePreference } = req.body;
+    const { 
+      favoriteCategories, 
+      preferredLanguages, 
+      preferredCities, 
+      budgetPreference, 
+      timePreference,
+      additionalPreferences
+    } = req.body;
 
     const query = `
-      INSERT INTO preferences (user_id, favorite_categories, preferred_languages, preferred_cities, budget_preference, time_preference, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      INSERT INTO preferences (
+        user_id, 
+        favorite_categories, 
+        preferred_languages, 
+        preferred_cities, 
+        budget_preference, 
+        time_preference, 
+        additional_preferences, 
+        updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
       ON CONFLICT (user_id) DO UPDATE 
       SET favorite_categories = EXCLUDED.favorite_categories,
           preferred_languages = EXCLUDED.preferred_languages,
           preferred_cities = EXCLUDED.preferred_cities,
           budget_preference = EXCLUDED.budget_preference,
           time_preference = EXCLUDED.time_preference,
+          additional_preferences = EXCLUDED.additional_preferences,
           updated_at = NOW()
       RETURNING *
     `;
@@ -84,7 +101,8 @@ export async function updateUserPreferences(req, res) {
       JSON.stringify(preferredLanguages || []),
       JSON.stringify(preferredCities || []),
       Number(budgetPreference) || 1000.00,
-      timePreference || 'evening'
+      timePreference || 'evening',
+      JSON.stringify(additionalPreferences || {})
     ]);
 
     res.json(result.rows[0]);

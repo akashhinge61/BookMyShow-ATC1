@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CompareCornerDrawer from './components/CompareCornerDrawer';
+import FloatingHomeButton from './components/FloatingHomeButton';
 
 // Pages lazy/direct imports
 import Home from './pages/Home';
@@ -13,6 +14,7 @@ import Bookings from './pages/Bookings';
 import Profile from './pages/Profile';
 import BookingFlow from './pages/BookingFlow';
 import CategoryPage from './pages/CategoryPage';
+import OccasionPage from './pages/OccasionPage';
 
 function Layout({ children }) {
   return (
@@ -22,6 +24,7 @@ function Layout({ children }) {
         {children}
       </main>
       <CompareCornerDrawer />
+      <FloatingHomeButton />
       <Footer />
     </div>
   );
@@ -39,6 +42,7 @@ export default function App() {
           <Route path="/bookings" element={<Bookings />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/checkout" element={<BookingFlow />} />
+          <Route path="/occasion/:occasionName" element={<OccasionPage />} />
           
           {/* Category Routes */}
           <Route path="/movies" element={<CategoryPage categoryId="movies" />} />

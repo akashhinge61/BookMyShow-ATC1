@@ -1,28 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin, User, Menu, X, LogOut, Ticket, Sliders, Sparkles } from 'lucide-react';
+import { Search, MapPin, User, Menu, X, LogOut, Ticket, Sliders, Sparkles, Sun, Moon, Monitor, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { usePreferences } from '../context/PreferencesContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Navbar() {
   const { user, logout, loginWithGoogle } = useAuth();
   const { preferredCity, changeCity } = usePreferences();
+  const { theme, setTheme } = useTheme();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [citySearchQuery, setCitySearchQuery] = useState('');
+  const [recentCities, setRecentCities] = useState([]);
+  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
+
   const navigate = useNavigate();
 
-  const cities = ['Mumbai', 'Delhi', 'Bengaluru', 'Pune'];
+  const popularCities = ['Mumbai', 'Delhi', 'Bengaluru', 'Pune', 'Hyderabad', 'Chennai', 'Ahmedabad', 'Kolkata'];
+  
+  const allCities = [
+    'Mumbai', 'Delhi', 'Bengaluru', 'Pune', 'Hyderabad', 
+    'Chennai', 'Ahmedabad', 'Kolkata', 'Nagpur', 'Nashik', 
+    'Goa', 'Indore', 'Lucknow', 'Surat', 'Jaipur', 
+    'Bhopal', 'Kochi', 'Mysuru', 'Chandigarh', 'Patna'
+  ].sort();
+
+  // Load recent cities from localStorage
+  useEffect(() => {
+    const recents = JSON.parse(localStorage.getItem('recent_cities') || '[]');
+    setRecentCities(recents);
+  }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
+      setMobileMenuOpen(false);
     }
   };
 
-  const handleCityChange = (e) => {
-    changeCity(e.target.value);
+  const handleCitySelect = (city) => {
+    changeCity(city);
+    
+    // Save to recents (max 4 unique cities)
+    const updatedRecents = [city, ...recentCities.filter(c => c !== city)].slice(0, 4);
+    setRecentCities(updatedRecents);
+    localStorage.setItem('recent_cities', JSON.stringify(updatedRecents));
+    
+    setLocationModalOpen(false);
+    setCitySearchQuery('');
   };
 
   const handleMockLogin = () => {
@@ -31,10 +61,15 @@ export default function Navbar() {
     loginWithGoogle({ id: 'mock-user-google-id', email, name });
   };
 
+  // Filter cities based on search query
+  const filteredCities = allCities.filter(city => 
+    city.toLowerCase().includes(citySearchQuery.toLowerCase())
+  );
+
   return (
-    <header className="bg-[#1F2125] text-white border-b border-gray-800 sticky top-0 z-50">
+    <header className="bg-[#1F2125] dark:bg-[#1A1C20] text-white border-b border-gray-800 sticky top-0 z-50 transition-colors duration-200">
       {/* Top Navbar Row */}
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
         
         {/* Brand Logo */}
         <Link to="/" className="flex items-center gap-1.5 flex-shrink-0 select-none">
@@ -47,13 +82,13 @@ export default function Navbar() {
         </Link>
 
         {/* Search Bar Form */}
-        <form onSubmit={handleSearchSubmit} className="flex-1 max-w-lg relative hidden sm:block">
+        <form onSubmit={handleSearchSubmit} className="flex-1 max-w-xl relative hidden sm:block">
           <input
             type="text"
             placeholder="Search for Movies, Plays, Concerts, Sports and Activities..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#33353D] text-gray-200 text-xs pl-10 pr-4 py-2.5 rounded-md focus:outline-none focus:ring-1 focus:ring-brand border border-transparent focus:border-brand/40"
+            className="w-full bg-[#33353D] dark:bg-[#252830] text-gray-200 text-xs pl-10 pr-4 py-2.5 rounded-md focus:outline-none focus:ring-1 focus:ring-brand border border-transparent focus:border-brand/40 transition-all"
           />
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3 pointer-events-none" />
         </form>
@@ -61,20 +96,53 @@ export default function Navbar() {
         {/* Action Widgets */}
         <div className="flex items-center gap-4">
           
-          {/* City Location dropdown selector */}
-          <div className="flex items-center gap-1.5 text-xs text-gray-300">
+          {/* City Location selector button */}
+          <button
+            onClick={() => setLocationModalOpen(true)}
+            className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-brand transition-colors font-semibold py-1.5 px-2.5 rounded-lg bg-white/5 hover:bg-white/10"
+          >
             <MapPin className="w-3.5 h-3.5 text-brand" />
-            <select
-              value={preferredCity}
-              onChange={handleCityChange}
-              className="bg-transparent text-gray-200 focus:outline-none cursor-pointer font-semibold py-1 pr-1 hover:text-white"
+            <span>{preferredCity}</span>
+            <span className="text-[10px] text-gray-500">▼</span>
+          </button>
+
+          {/* Theme Selector Button */}
+          <div className="relative">
+            <button
+              onClick={() => setThemeDropdownOpen(!themeDropdownOpen)}
+              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-colors"
+              title="Toggle Theme"
             >
-              {cities.map((city) => (
-                <option key={city} value={city} className="bg-[#1F2125] text-white">
-                  {city}
-                </option>
-              ))}
-            </select>
+              {theme === 'light' ? <Sun className="w-4 h-4 text-amber-400" /> : 
+               theme === 'dark' ? <Moon className="w-4 h-4 text-brand" /> : 
+               <Monitor className="w-4 h-4 text-blue-400" />}
+            </button>
+
+            {themeDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setThemeDropdownOpen(false)} />
+                <div className="absolute right-0 mt-2 w-32 bg-[#1A1C20] border border-gray-800 rounded-lg shadow-xl py-1 z-20 text-xs animate-slide-up">
+                  <button
+                    onClick={() => { setTheme('light'); setThemeDropdownOpen(false); }}
+                    className={`w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-white/5 ${theme === 'light' ? 'text-brand font-bold' : 'text-gray-300'}`}
+                  >
+                    <Sun className="w-3.5 h-3.5" /> Light
+                  </button>
+                  <button
+                    onClick={() => { setTheme('dark'); setThemeDropdownOpen(false); }}
+                    className={`w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-white/5 ${theme === 'dark' ? 'text-brand font-bold' : 'text-gray-300'}`}
+                  >
+                    <Moon className="w-3.5 h-3.5" /> Dark
+                  </button>
+                  <button
+                    onClick={() => { setTheme('system'); setThemeDropdownOpen(false); }}
+                    className={`w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-white/5 ${theme === 'system' ? 'text-brand font-bold' : 'text-gray-300'}`}
+                  >
+                    <Monitor className="w-3.5 h-3.5" /> System
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           {/* User Signin / Settings controls */}
@@ -87,7 +155,7 @@ export default function Navbar() {
                 </Link>
                 <button
                   onClick={logout}
-                  className="bg-gray-800 hover:bg-gray-700 text-xs px-3 py-1.5 rounded text-gray-300 border border-gray-700 hover:text-white"
+                  className="bg-gray-800 hover:bg-gray-700 text-xs px-3 py-1.5 rounded text-gray-300 border border-gray-700 hover:text-white transition-colors"
                 >
                   Logout
                 </button>
@@ -114,8 +182,8 @@ export default function Navbar() {
       </div>
 
       {/* Secondary Navbar Row (Categories bar) */}
-      <div className="bg-[#121214] text-xs font-semibold border-t border-gray-800/40 py-2.5 hidden md:block">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
+      <div className="bg-[#121214] dark:bg-[#0F1012] text-xs font-semibold border-t border-gray-800/40 py-2.5 hidden md:block transition-colors duration-200">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-6 text-gray-300">
             <Link to="/movies" className="hover:text-white transition-colors">Movies</Link>
             <Link to="/comedy" className="hover:text-white transition-colors">Comedy Shows</Link>
@@ -126,11 +194,11 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-5 text-gray-400 font-medium">
-            <Link to="/bookings" className="hover:text-white flex items-center gap-1">
+            <Link to="/bookings" className="hover:text-white flex items-center gap-1 transition-colors">
               <Ticket className="w-3.5 h-3.5 text-brand" />
               My Bookings
             </Link>
-            <Link to="/profile" className="hover:text-white flex items-center gap-1">
+            <Link to="/profile" className="hover:text-white flex items-center gap-1 transition-colors">
               <Sliders className="w-3.5 h-3.5 text-brand" />
               AI Preferences
             </Link>
@@ -140,7 +208,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#1F2125] border-t border-gray-800 py-4 px-4 space-y-4 fade-in">
+        <div className="md:hidden bg-[#1F2125] dark:bg-[#1A1C20] border-t border-gray-800 py-4 px-4 space-y-4 fade-in">
           
           {/* Mobile Search */}
           <form onSubmit={handleSearchSubmit} className="relative w-full">
@@ -149,7 +217,7 @@ export default function Navbar() {
               placeholder="Search movies, comedy, activities..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#33353D] text-gray-200 text-xs pl-10 pr-4 py-2.5 rounded-md focus:outline-none"
+              className="w-full bg-[#33353D] dark:bg-[#252830] text-gray-200 text-xs pl-10 pr-4 py-2.5 rounded-md focus:outline-none"
             />
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3 pointer-events-none" />
           </form>
@@ -207,7 +275,118 @@ export default function Navbar() {
               </button>
             )}
           </div>
+        </div>
+      )}
 
+      {/* SEARCHABLE LOCATION PICKER MODAL OVERLAY */}
+      {locationModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#1F2125] dark:bg-[#1A1C20] border border-gray-800 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] animate-slide-up text-white">
+            
+            {/* Modal Header */}
+            <div className="p-4 border-b border-gray-800 flex justify-between items-center gap-4">
+              <div className="flex-grow relative">
+                <input
+                  type="text"
+                  placeholder="Search for your city..."
+                  value={citySearchQuery}
+                  onChange={(e) => setCitySearchQuery(e.target.value)}
+                  className="w-full bg-[#33353D] dark:bg-[#252830] text-sm text-white pl-10 pr-4 py-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand border border-transparent focus:border-brand/40"
+                  autoFocus
+                />
+                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3.5 pointer-events-none" />
+              </div>
+              <button
+                onClick={() => { setLocationModalOpen(false); setCitySearchQuery(''); }}
+                className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6 max-h-[60vh] no-scrollbar">
+              
+              {/* Recent Locations */}
+              {recentCities.length > 0 && !citySearchQuery && (
+                <div className="space-y-2.5">
+                  <h5 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" /> Recent Locations
+                  </h5>
+                  <div className="flex flex-wrap gap-2">
+                    {recentCities.map(city => (
+                      <button
+                        key={city}
+                        onClick={() => handleCitySelect(city)}
+                        className="px-3.5 py-2 rounded-full text-xs font-bold border border-gray-800 bg-[#252830] text-gray-200 hover:border-brand hover:text-brand transition-all flex items-center gap-1"
+                      >
+                        <MapPin className="w-3 h-3 text-brand" /> {city}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Popular Cities list */}
+              {!citySearchQuery && (
+                <div className="space-y-3">
+                  <h5 className="text-xs font-bold uppercase tracking-wider text-gray-500">Popular Cities</h5>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                    {popularCities.map(city => {
+                      const isCurrent = city === preferredCity;
+                      return (
+                        <button
+                          key={city}
+                          onClick={() => handleCitySelect(city)}
+                          className={`p-3 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-1.5 ${
+                            isCurrent
+                              ? 'bg-brand/10 border-brand text-brand shadow-lg shadow-brand/5'
+                              : 'bg-[#252830] border-gray-800/80 text-gray-200 hover:border-gray-700'
+                          }`}
+                        >
+                          <div className={`p-2 rounded-full ${isCurrent ? 'bg-brand text-white' : 'bg-[#33353D] text-gray-400'} transition-all`}>
+                            <MapPin className="w-4 h-4" />
+                          </div>
+                          <span>{city}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Complete matching/filtered list */}
+              <div className="space-y-2.5">
+                <h5 className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                  {citySearchQuery ? `Search Results (${filteredCities.length})` : 'All Cities'}
+                </h5>
+                
+                {filteredCities.length === 0 ? (
+                  <p className="text-center py-6 text-xs text-gray-500 font-bold">No cities found matching "{citySearchQuery}"</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    {filteredCities.map(city => {
+                      const isCurrent = city === preferredCity;
+                      return (
+                        <button
+                          key={city}
+                          onClick={() => handleCitySelect(city)}
+                          className={`px-3 py-2.5 rounded-lg border text-left text-xs font-semibold truncate transition-colors ${
+                            isCurrent
+                              ? 'bg-brand border-brand text-white'
+                              : 'bg-[#252830]/60 hover:bg-[#252830] border-gray-850 text-gray-300 hover:text-white'
+                          }`}
+                        >
+                          {city}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </div>
         </div>
       )}
 

@@ -19,10 +19,10 @@ export default function CompareCornerDrawer() {
             <GitCompare className="w-5 h-5" />
           </div>
           <div>
-            <h5 className="text-sm font-bold text-white flex items-center gap-1.5">
+            <h5 className="text-sm font-bold text-white flex items-center gap-1.5 font-sans">
               Compare Corner 
               <span className="bg-brand/20 text-brand text-xs font-semibold px-2 py-0.5 rounded-full">
-                {compareList.length}/3 selected
+                {compareList.length}/5 selected
               </span>
             </h5>
             <p className="text-[11px] text-gray-400 hidden sm:block">Compare pricing, venues, durations, and AI match scores.</p>
@@ -51,10 +51,10 @@ export default function CompareCornerDrawer() {
           ))}
           
           {/* Empty placeholders */}
-          {Array.from({ length: 3 - compareList.length }).map((_, i) => (
+          {Array.from({ length: 5 - compareList.length }).map((_, i) => (
             <div 
               key={i}
-              className="w-12 h-16 rounded border border-dashed border-gray-700 flex items-center justify-center text-gray-600 bg-black/20 text-[10px]"
+              className="w-12 h-16 rounded border border-dashed border-gray-700/60 flex items-center justify-center text-gray-500 bg-black/20 text-[10px] font-bold"
             >
               + Slot
             </div>

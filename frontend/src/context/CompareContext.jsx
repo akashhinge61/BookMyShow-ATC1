@@ -14,9 +14,9 @@ export function CompareProvider({ children }) {
       return;
     }
 
-    // Limit to 3 items
-    if (compareList.length >= 3) {
-      addToast('You can compare a maximum of 3 events at a time', 'error');
+    // Limit to 5 items
+    if (compareList.length >= 5) {
+      addToast('You can compare a maximum of 5 events at a time', 'error');
       return;
     }
 

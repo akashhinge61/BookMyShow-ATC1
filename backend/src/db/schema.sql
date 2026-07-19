@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS events (
     "cast" JSONB DEFAULT '[]'::jsonb,
     genre VARCHAR(100),
     reviews JSONB DEFAULT '[]'::jsonb,
-    is_trending BOOLEAN DEFAULT false
+    is_trending BOOLEAN DEFAULT false,
+    metadata JSONB DEFAULT '{}'::jsonb
 );
 
 -- Create Preferences Table
@@ -44,6 +45,7 @@ CREATE TABLE IF NOT EXISTS preferences (
     preferred_cities JSONB DEFAULT '[]'::jsonb,
     budget_preference NUMERIC(10, 2) DEFAULT 1000.0,
     time_preference VARCHAR(50) DEFAULT 'evening',
+    additional_preferences JSONB DEFAULT '{}'::jsonb,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

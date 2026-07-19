@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Star, Sparkles, Clock, MapPin, Globe, Calendar, GitCompare, Bookmark, BookmarkCheck } from 'lucide-react';
+import { Star, Sparkles, Clock, MapPin, Globe, Calendar, GitCompare, Bookmark, BookmarkCheck, Share2, ThumbsUp, ChevronRight, Percent, Award, Compass } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCompare } from '../context/CompareContext';
 import { useBooking } from '../context/BookingContext';
@@ -12,7 +12,7 @@ export default function EventDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { addToCompare, isComparing, removeFromCompare } = useCompare();
+  const { addToCompare, isComparing, removeFromCompare, compareList } = useCompare();
   const { setBookingDetails } = useBooking();
   const { addToast } = useToast();
 
@@ -20,6 +20,7 @@ export default function EventDetail() {
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [similarEvents, setSimilarEvents] = useState([]);
 
   // Selected date & showtime states for checkout mapping
   const [selectedDate, setSelectedDate] = useState('');
@@ -35,24 +36,32 @@ export default function EventDetail() {
         const res = await axios.get(`/api/events/${id}`, {
           headers: { 'x-user-id': user.id }
         });
-        setEvent(res.data);
+        const eventData = res.data;
+        setEvent(eventData);
         
         // Auto set default show date & showtime
-        if (res.data.event_date) {
-          const dateStr = typeof res.data.event_date === 'string' 
-            ? res.data.event_date.split('T')[0]
-            : new Date(res.data.event_date).toISOString().split('T')[0];
+        if (eventData.event_date) {
+          const dateStr = typeof eventData.event_date === 'string' 
+            ? eventData.event_date.split('T')[0]
+            : new Date(eventData.event_date).toISOString().split('T')[0];
           setSelectedDate(dateStr);
         }
-        if (res.data.event_time) {
-          setSelectedTime(res.data.event_time);
+        if (eventData.event_time) {
+          setSelectedTime(eventData.event_time);
         }
 
-        // Check if event is bookmarked/saved
+        // Fetch check bookmarks/saved
         const savedRes = await axios.get('/api/user/saved', {
           headers: { 'x-user-id': user.id }
         });
         setIsSaved(savedRes.data.some(e => e.id === Number(id)));
+
+        // Fetch similar events in the same city/category
+        const simRes = await axios.get(`/api/events?category=${eventData.category_id}&city=${eventData.venue_city}`, {
+          headers: { 'x-user-id': user.id }
+        });
+        setSimilarEvents(simRes.data.filter(e => e.id !== Number(id)).slice(0, 4));
+
       } catch (err) {
         console.error('Failed to load event details:', err.message);
         addToast('Error loading event details', 'error');
@@ -94,20 +103,26 @@ export default function EventDetail() {
       addToast('Please select a valid date and showtime slot.', 'error');
       return;
     }
-    // Set checkout parameters in BookingContext
     setBookingDetails(event, selectedDate, selectedTime);
     navigate('/checkout');
   };
 
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    addToast('Link copied to clipboard!', 'success');
+  };
+
   if (loading) return <DetailSkeleton />;
-  if (!event) return (
-    <div className="text-center py-20 bg-[#0B0C0E]">
-      <h3 className="text-xl font-bold text-white">Event not found</h3>
-      <button onClick={() => navigate('/')} className="mt-4 bg-brand text-white px-4 py-2 rounded">
-        Back to Home
-      </button>
-    </div>
-  );
+  if (!event) {
+    return (
+      <div className="text-center py-20 bg-[#0B0C0E]">
+        <h3 className="text-xl font-bold text-white">Event not found</h3>
+        <button onClick={() => navigate('/')} className="mt-4 bg-brand text-white px-4 py-2 rounded">
+          Back to Home
+        </button>
+      </div>
+    );
+  }
 
   const formattedPrice = Number(event.price).toLocaleString('en-IN', {
     style: 'currency',
@@ -115,143 +130,266 @@ export default function EventDetail() {
     maximumFractionDigits: 0
   });
 
+  const metadata = event.metadata || {};
+  const crew = metadata.crew || [];
+  const gallery = metadata.gallery || [];
+  const offersList = metadata.offers || [
+    'Buy 1 Get 1 free using Axis Signature Cards',
+    'Get flat 15% discount using ICICI NetBanking services'
+  ];
+
   return (
-    <div className="bg-[#0B0C0E] text-white pb-20">
+    <div className="bg-white dark:bg-[#0B0C0E] text-gray-900 dark:text-white pb-20 transition-colors duration-200">
       
-      {/* Visual Banner Backdrop (Blurred hero style) */}
-      <div className="relative h-64 md:h-[380px] overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0B0C0E] via-[#0B0C0E]/70 to-black/35 z-10" />
+      {/* 1. Large Hero Banner Backdrop */}
+      <div className="relative h-64 md:h-[400px] overflow-hidden bg-black select-none">
+        <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#0B0C0E] via-black/85 to-black/35 z-10" />
         <img
           src={event.banner_url || event.poster_url}
           alt={event.title}
-          className="w-full h-full object-cover object-center filter blur-sm scale-105 opacity-40"
+          className="w-full h-full object-cover object-center filter blur-md scale-105 opacity-55"
         />
         
         {/* Real Content overlay */}
-        <div className="absolute inset-0 max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-end gap-6 z-20 pb-6 md:pb-8">
+        <div className="absolute inset-0 max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-end gap-8 z-20 pb-8">
           {/* Floating Poster */}
           <div className="w-36 md:w-56 h-52 md:h-80 rounded-xl overflow-hidden shadow-2xl border border-gray-800 flex-shrink-0 hidden sm:block">
             <img src={event.poster_url} alt={event.title} className="w-full h-full object-cover" />
           </div>
 
           {/* Details Row */}
-          <div className="flex-1 space-y-3">
-            <h1 className="text-xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+          <div className="flex-1 space-y-4 text-white">
+            <h1 className="text-xl md:text-5xl font-black tracking-tight leading-none font-sans">
               {event.title}
             </h1>
 
             {/* Ratings Summary */}
-            <div className="flex items-center gap-4 py-1.5 px-3 bg-white/5 border border-white/10 rounded-lg w-fit">
+            <div className="flex items-center gap-4 py-2 px-3 bg-white/10 border border-white/20 rounded-xl w-fit backdrop-blur-sm">
               <div className="flex items-center gap-1">
-                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                <span className="text-sm font-bold">{Number(event.rating).toFixed(1)}/10</span>
+                <Star className="w-4.5 h-4.5 text-amber-400 fill-amber-400" />
+                <span className="text-sm font-black">{Number(event.rating).toFixed(1)}/10</span>
               </div>
-              <span className="text-xs text-gray-400">({event.rating_count.toLocaleString()} votes)</span>
+              <span className="text-[11px] text-gray-300">({event.rating_count.toLocaleString()} votes)</span>
+              {metadata.critics_rating && (
+                <div className="flex items-center gap-1 border-l border-white/25 pl-4">
+                  <Award className="w-4 h-4 text-brand" />
+                  <span className="text-xs font-black text-brand">{metadata.critics_rating}/10 Critics</span>
+                </div>
+              )}
             </div>
 
             {/* Event Specs Tags */}
-            <div className="flex flex-wrap items-center gap-2.5 text-xs text-gray-300">
-              <span className="bg-gray-800 px-2.5 py-1 rounded text-[11px] font-bold text-gray-400 uppercase">
+            <div className="flex flex-wrap items-center gap-2.5 text-xs text-gray-200">
+              <span className="bg-brand/20 text-brand border border-brand/35 px-2.5 py-1 rounded font-black uppercase text-[10px] tracking-wider">
                 {event.category_id}
               </span>
-              <span className="bg-gray-800 px-2.5 py-1 rounded text-[11px] text-gray-300">
+              <span className="bg-white/10 px-2.5 py-1 rounded text-[11px] font-semibold border border-white/5">
                 {event.genre}
               </span>
-              <span className="flex items-center gap-1 bg-gray-800/50 px-2.5 py-1 rounded">
-                <Clock className="w-3.5 h-3.5" />
-                {event.duration_mins} mins
-              </span>
-              <span className="flex items-center gap-1 bg-gray-800/50 px-2.5 py-1 rounded">
-                <Globe className="w-3.5 h-3.5" />
-                {event.language}
-              </span>
+              {event.duration_mins && (
+                <span className="flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded border border-white/5">
+                  <Clock className="w-3.5 h-3.5" />
+                  {event.duration_mins} mins
+                </span>
+              )}
+              {event.language && (
+                <span className="flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded border border-white/5">
+                  <Globe className="w-3.5 h-3.5" />
+                  {event.language}
+                </span>
+              )}
+              {metadata.age_suitability && (
+                <span className="bg-red-500/10 border border-red-500/35 text-red-400 font-bold px-2 py-0.5 rounded text-[10px]">
+                  {metadata.age_suitability}
+                </span>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Grid Content */}
-      <div className="max-w-6xl mx-auto px-4 mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Column: Details, Cast, Venue */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-10">
           
-          {/* AI personalization overlap explanation */}
-          {event.aiReason && (
-            <div className="p-5 rounded-xl border border-brand/20 bg-gradient-to-br from-brand/10 to-[#161114] space-y-2.5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-brand/5 rounded-full filter blur-xl" />
-              <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-brand animate-pulse" />
-                AI Discovery Explanation
-              </h4>
-              <p className="text-xs text-gray-300 leading-relaxed italic">
-                "{event.aiReason}"
+          {/* 2. SOLUTION 1: AI Recommendation Card */}
+          <div className="p-6 rounded-2xl border border-brand/25 bg-gradient-to-br from-brand/10 via-[#1C1115]/10 to-transparent dark:to-[#15171B]/35 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-brand animate-pulse" />
+                <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider">AI Curation Overlap</h4>
+              </div>
+              {event.matchPercentage && (
+                <div className="bg-brand text-white font-black text-xs px-3 py-1 rounded-full shadow">
+                  {event.matchPercentage}% Match
+                </div>
+              )}
+            </div>
+            
+            {/* Why You'll Love It */}
+            <div className="space-y-1">
+              <span className="text-[10px] text-gray-400 font-extrabold uppercase">Why You'll Love It</span>
+              <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed italic">
+                "{event.aiReason || 'Highly fits your personal categorization preferences.'}"
               </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 text-xs border-t border-gray-200 dark:border-gray-800/40 mt-2">
+              {metadata.best_for && (
+                <div>
+                  <span className="text-[10px] text-gray-400 font-extrabold uppercase">Best For</span>
+                  <p className="text-xs text-gray-900 dark:text-gray-200 font-semibold">{metadata.best_for}</p>
+                </div>
+              )}
+              {metadata.mood && (
+                <div>
+                  <span className="text-[10px] text-gray-400 font-extrabold uppercase">Event Mood</span>
+                  <p className="text-xs text-gray-900 dark:text-gray-200 font-semibold">{metadata.mood}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Things to Know */}
+            {metadata.highlights && metadata.highlights.length > 0 && (
+              <div className="pt-2">
+                <span className="text-[10px] text-gray-400 font-extrabold uppercase block mb-1.5">Things To Know</span>
+                <div className="flex flex-wrap gap-2">
+                  {metadata.highlights.map((tag, idx) => (
+                    <span key={idx} className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2.5 py-1 rounded-lg text-[10px] font-semibold border border-gray-200 dark:border-gray-700/60">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 3. Compare Similar Events */}
+          {similarEvents.length > 0 && (
+            <div className="bg-gray-50 dark:bg-[#15171B]/35 border border-gray-200 dark:border-gray-850 p-5 rounded-2xl space-y-4 shadow-md">
+              <div className="flex justify-between items-center pb-2.5 border-b border-gray-200 dark:border-gray-800/60">
+                <div className="flex items-center gap-1.5">
+                  <GitCompare className="w-5 h-5 text-brand" />
+                  <h4 className="text-xs font-black uppercase text-gray-900 dark:text-white tracking-wider">Compare Similar Shows</h4>
+                </div>
+                <span className="text-[10px] text-gray-500 font-bold">Compare up to 5 events</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {similarEvents.map(sim => {
+                  const inCompare = isComparing(sim.id);
+                  return (
+                    <div key={sim.id} className="bg-white dark:bg-[#202227]/40 border border-gray-200 dark:border-gray-800 p-2.5 rounded-xl flex flex-col justify-between items-center text-center space-y-2.5 shadow-sm">
+                      <img src={sim.poster_url} alt={sim.title} className="w-12 h-16 object-cover rounded shadow" />
+                      <h5 className="text-[10px] font-bold text-gray-800 dark:text-gray-200 line-clamp-1 w-full">{sim.title}</h5>
+                      <button
+                        onClick={() => inCompare ? removeFromCompare(sim.id) : addToCompare(sim)}
+                        className={`w-full py-1 rounded font-bold text-[9px] border transition-colors ${
+                          inCompare
+                            ? 'bg-brand/10 border-brand text-brand'
+                            : 'bg-gray-150 dark:bg-gray-800 border-transparent text-gray-700 dark:text-gray-300 hover:bg-brand hover:text-white'
+                        }`}
+                      >
+                        {inCompare ? 'Remove' : '+ Compare'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+              {compareList.length >= 2 && (
+                <div className="pt-2 flex justify-end">
+                  <Link to="/compare" className="bg-brand hover:bg-brand-dark text-white font-bold text-xs px-4 py-2 rounded-lg shadow-lg hover:shadow-brand/20 flex items-center gap-1 select-none">
+                    Compare Selected ({compareList.length}) <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Description */}
+          {/* About description */}
           <div className="space-y-3">
-            <h3 className="text-base font-bold uppercase tracking-wider text-gray-200 border-l-2 border-brand pl-2.5">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900 dark:text-gray-200 border-l-2 border-brand pl-2.5">
               About the Event
             </h3>
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed font-semibold">
               {event.description}
             </p>
           </div>
 
-          {/* Cast/Artists (Circular scroll row) */}
+          {/* Circular Cast list */}
           {event.cast && event.cast.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-base font-bold uppercase tracking-wider text-gray-200 border-l-2 border-brand pl-2.5">
-                Cast & Crew
+              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900 dark:text-gray-200 border-l-2 border-brand pl-2.5">
+                Cast & Artists
               </h3>
-              <div className="flex gap-6 overflow-x-auto pb-2 no-scrollbar">
+              <div className="flex gap-6 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
                 {event.cast.map((actor, idx) => (
-                  <div key={idx} className="flex flex-col items-center text-center space-y-1.5 flex-shrink-0">
-                    <div className="w-14 h-14 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center font-bold text-gray-400 uppercase shadow-md">
+                  <div key={idx} className="flex flex-col items-center text-center space-y-1.5 flex-shrink-0 select-none">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-850 border border-gray-300 dark:border-gray-700 flex items-center justify-center font-bold text-gray-400 uppercase shadow-md select-none">
                       {actor.name.split(' ').map(n => n[0]).join('')}
                     </div>
-                    <span className="text-[11px] font-semibold text-white block max-w-[80px] truncate">{actor.name}</span>
-                    <span className="text-[9px] text-gray-500 block max-w-[80px] truncate">{actor.role}</span>
+                    <span className="text-[11px] font-bold text-gray-800 dark:text-white block max-w-[85px] truncate">{actor.name}</span>
+                    <span className="text-[9px] text-gray-400 block max-w-[85px] truncate">{actor.role}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Venue & Location coords */}
-          <div className="space-y-4">
-            <h3 className="text-base font-bold uppercase tracking-wider text-gray-200 border-l-2 border-brand pl-2.5">
-              Venue
-            </h3>
-            <div className="p-4 bg-[#15171B] border border-gray-800 rounded-xl flex items-start gap-3">
-              <MapPin className="w-5 h-5 text-brand flex-shrink-0 mt-0.5" />
-              <div>
-                <h5 className="text-sm font-bold text-white">{event.venue_name}</h5>
-                <p className="text-xs text-gray-400 mt-0.5">City: {event.venue_city}</p>
-                <p className="text-[10px] text-gray-500 mt-2">Map coordinates: Lat 18.920, Lng 72.825 (Mock Location)</p>
+          {/* Crew list */}
+          {crew.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900 dark:text-gray-200 border-l-2 border-brand pl-2.5">
+                Crew Members
+              </h3>
+              <div className="flex gap-6 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
+                {crew.map((member, idx) => (
+                  <div key={idx} className="flex flex-col items-center text-center space-y-1.5 flex-shrink-0 select-none">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-850 border border-gray-300 dark:border-gray-700 flex items-center justify-center font-bold text-gray-500 uppercase shadow-md select-none">
+                      {member.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <span className="text-[11px] font-bold text-gray-800 dark:text-white block max-w-[85px] truncate">{member.name}</span>
+                    <span className="text-[9px] text-gray-400 block max-w-[85px] truncate">{member.role}</span>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Gallery images */}
+          {gallery.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900 dark:text-gray-200 border-l-2 border-brand pl-2.5">
+                Event Gallery
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {gallery.map((url, idx) => (
+                  <div key={idx} className="h-28 md:h-36 rounded-xl overflow-hidden shadow border border-gray-200 dark:border-gray-800 bg-gray-800">
+                    <img src={url} alt={`Gallery ${idx}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Reviews list */}
           {event.reviews && event.reviews.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-base font-bold uppercase tracking-wider text-gray-200 border-l-2 border-brand pl-2.5">
-                User Reviews
+              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900 dark:text-gray-200 border-l-2 border-brand pl-2.5">
+                User Reviews & Reactions
               </h3>
               <div className="space-y-3">
                 {event.reviews.map((rev, idx) => (
-                  <div key={idx} className="p-4 bg-[#15171B]/55 border border-gray-800/80 rounded-xl space-y-2">
+                  <div key={idx} className="p-4 bg-gray-50 dark:bg-[#15171B]/55 border border-gray-200 dark:border-gray-800/80 rounded-xl space-y-2 shadow-sm">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-200">{rev.user}</span>
-                      <div className="flex items-center gap-1 text-xs text-amber-400 font-bold bg-amber-400/5 px-2 py-0.5 border border-amber-400/10 rounded">
+                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200">{rev.user}</span>
+                      <div className="flex items-center gap-1 text-xs text-amber-500 font-bold bg-amber-500/10 px-2 py-0.5 border border-amber-500/20 rounded">
                         <Star className="w-3 h-3 fill-amber-400" />
                         {rev.rating}/10
                       </div>
                     </div>
-                    <p className="text-xs text-gray-400 leading-normal italic">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-normal italic">
                       "{rev.text}"
                     </p>
                   </div>
@@ -265,27 +403,28 @@ export default function EventDetail() {
         {/* Right Column: Checkout Slot Pickers & Compare Toggles */}
         <div className="space-y-6">
           
-          <div className="bg-[#15171B] border border-gray-800 p-5 rounded-xl space-y-6 shadow-xl sticky top-24">
+          {/* Checkout Box */}
+          <div className="bg-gray-50 dark:bg-[#15171B] border border-gray-200 dark:border-gray-800 p-5 rounded-2xl space-y-6 shadow-xl sticky top-24">
             
-            <div className="flex justify-between items-center pb-4 border-b border-gray-800">
+            <div className="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-800">
               <div>
-                <span className="text-[10px] uppercase font-bold text-gray-500">Ticket Price</span>
-                <h4 className="text-2xl font-black text-brand">{formattedPrice}</h4>
+                <span className="text-[9px] uppercase font-black text-gray-500 tracking-wider">Ticket Price</span>
+                <h4 className="text-2xl font-black text-brand leading-none">{formattedPrice}</h4>
               </div>
-              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-bold uppercase">
-                Available
+              <span className="text-[10px] bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 px-2.5 py-0.5 rounded-full font-bold uppercase">
+                Selling Fast
               </span>
             </div>
 
             {/* Show Booking Calendar Slot Selection */}
             <div className="space-y-2.5">
-              <label className="text-[11px] uppercase font-bold text-gray-400 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" /> Select Date
+              <label className="text-[10px] uppercase font-black text-gray-500 tracking-wider flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-brand" /> Select Date
               </label>
               <select
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full bg-[#202227] text-xs text-gray-200 rounded-lg p-2.5 border border-gray-800 focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer font-semibold"
+                className="w-full bg-white dark:bg-[#202227] text-xs text-gray-800 dark:text-gray-200 rounded-lg p-2.5 border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-1 focus:ring-brand cursor-pointer font-bold transition-all"
               >
                 <option value={selectedDate}>{new Date(selectedDate || Date.now()).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</option>
                 <option value={new Date(Date.now() + 86400000 * 8).toISOString().split('T')[0]}>
@@ -295,8 +434,8 @@ export default function EventDetail() {
             </div>
 
             <div className="space-y-2.5">
-              <label className="text-[11px] uppercase font-bold text-gray-400 flex items-center gap-1 font-sans">
-                <Clock className="w-3.5 h-3.5" /> Showtime
+              <label className="text-[10px] uppercase font-black text-gray-500 tracking-wider flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-brand" /> Showtime
               </label>
               <div className="grid grid-cols-2 gap-2.5">
                 {['13:00', '16:30', '19:00', '21:30'].map(time => (
@@ -306,7 +445,7 @@ export default function EventDetail() {
                     className={`text-xs py-2 rounded-lg font-bold border transition-all ${
                       selectedTime === time
                         ? 'bg-brand text-white border-brand shadow-lg shadow-brand/10'
-                        : 'bg-[#202227] text-gray-300 border-gray-800 hover:bg-gray-800'
+                        : 'bg-white dark:bg-[#202227] text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:bg-brand/5 hover:border-brand/50'
                     }`}
                   >
                     {time}
@@ -318,44 +457,60 @@ export default function EventDetail() {
             {/* Primary Booking Call-To-Action */}
             <button
               onClick={handleBookNow}
-              className="w-full bg-brand hover:bg-brand-dark text-white font-bold text-sm py-3 rounded-lg shadow-lg hover:shadow-brand/20 transition-all scale-[1.01] hover:scale-[1.02]"
+              className="w-full bg-brand hover:bg-brand-dark text-white font-bold text-sm py-3.5 rounded-lg shadow-lg hover:shadow-brand/20 transition-all scale-[1.01] hover:scale-[1.02]"
             >
               Book Tickets
             </button>
 
-            {/* Secondary actions: Save / Compare */}
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            {/* Save / Compare / Share Buttons */}
+            <div className="grid grid-cols-3 gap-2.5 pt-2">
               <button
                 onClick={handleSaveToggle}
                 disabled={saving}
-                className="flex items-center justify-center gap-1.5 text-xs bg-gray-800/40 hover:bg-gray-800 text-gray-300 hover:text-white py-2 rounded-lg border border-gray-800/80 transition-colors"
+                className="flex flex-col items-center justify-center gap-1 text-[10px] bg-white dark:bg-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 transition-colors"
+                title="Wishlist"
               >
-                {isSaved ? (
-                  <>
-                    <BookmarkCheck className="w-4 h-4 text-brand" />
-                    <span>Saved</span>
-                  </>
-                ) : (
-                  <>
-                    <Bookmark className="w-4 h-4" />
-                    <span>Save Event</span>
-                  </>
-                )}
+                {isSaved ? <BookmarkCheck className="w-4 h-4 text-brand" /> : <Bookmark className="w-4 h-4" />}
+                <span>{isSaved ? 'Saved' : 'Wishlist'}</span>
               </button>
 
               <button
                 onClick={handleCompareToggle}
-                className={`flex items-center justify-center gap-1.5 text-xs py-2 rounded-lg border transition-all ${
+                className={`flex flex-col items-center justify-center gap-1 text-[10px] py-2.5 rounded-xl border transition-all ${
                   comparing
-                    ? 'bg-brand/15 border-brand/50 text-brand font-bold'
-                    : 'bg-gray-800/40 hover:bg-gray-800 text-gray-300 hover:text-white border-gray-800/80'
+                    ? 'bg-brand/10 border-brand/50 text-brand font-bold'
+                    : 'bg-white dark:bg-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800'
                 }`}
+                title="Compare Corner"
               >
                 <GitCompare className="w-4 h-4" />
                 <span>Compare</span>
               </button>
-            </div>
 
+              <button
+                onClick={handleShare}
+                className="flex flex-col items-center justify-center gap-1 text-[10px] bg-white dark:bg-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 transition-colors"
+                title="Share Event"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>Share</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Offers list widget */}
+          <div className="bg-gray-50 dark:bg-[#15171B] border border-gray-200 dark:border-gray-800 p-5 rounded-2xl space-y-4 shadow shadow-md">
+            <h5 className="text-[11px] font-black uppercase text-gray-900 dark:text-white tracking-wider flex items-center gap-1.5 border-b border-gray-200 dark:border-gray-800 pb-2.5">
+              <Percent className="w-4 h-4 text-brand" /> Active Promotions
+            </h5>
+            <div className="space-y-3">
+              {offersList.map((off, index) => (
+                <div key={index} className="flex gap-2.5 text-xs text-gray-700 dark:text-gray-300 font-semibold leading-relaxed">
+                  <Sparkles className="w-3.5 h-3.5 text-brand flex-shrink-0 mt-0.5" />
+                  <span>{off}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
         </div>

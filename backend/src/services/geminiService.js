@@ -164,7 +164,8 @@ export async function getAIOccasionCollection(occasion, events, preferences) {
     preferredLanguages: preferences.preferred_languages,
     preferredCities: preferences.preferred_cities,
     budgetPreference: preferences.budget_preference,
-    timePreference: preferences.time_preference
+    timePreference: preferences.time_preference,
+    additionalPreferences: preferences.additional_preferences || {}
   };
 
   const prompt = `
@@ -221,7 +222,8 @@ export async function getAIComparison(events, preferences) {
     preferredLanguages: preferences.preferred_languages,
     preferredCities: preferences.preferred_cities,
     budgetPreference: preferences.budget_preference,
-    timePreference: preferences.time_preference
+    timePreference: preferences.time_preference,
+    additionalPreferences: preferences.additional_preferences || {}
   };
 
   const candidateEvents = events.map(e => ({
@@ -413,6 +415,7 @@ User Profile:
 - Favorite Categories: ${JSON.stringify(preferences.favorite_categories)}
 - Preferred Languages: ${JSON.stringify(preferences.preferred_languages)}
 - Budget Preference: ₹${preferences.budget_preference}
+- Additional Personalization Metrics: ${JSON.stringify(preferences.additional_preferences || {})}
 
 Write a short, engaging, 1-2 sentence explanation in the second person ("This matches your preference because...") highlighting specific overlaps. Do not output JSON, just return raw text. Keep it brief.
 `;

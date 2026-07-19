@@ -3,20 +3,22 @@ import { getAIOccasionCollection, getAIComparison } from '../services/geminiServ
 
 // Occasion categories list
 const OCCASIONS = [
-  'For You',
-  'Date Night',
   'Weekend Plans',
-  'Need a Laugh',
+  'Date Night',
+  'Family Time',
+  'Friends Night Out',
+  'Solo Escape',
+  'Office Break',
   'Live Music Tonight',
-  'Under ₹500',
-  'Under 2 Hours',
-  'Trending Near You',
-  'Friends Hangout',
-  'Family Night',
-  'After Office Escape',
+  'Comedy Evening',
+  'Budget Plans',
+  'Luxury Experiences',
   'Rainy Day Picks',
-  'Birthday Plans',
-  'Kids Friendly'
+  'Kids Activities',
+  'Sports Fan Picks',
+  'Romantic Evening',
+  'Festival Specials',
+  'Trending Near You'
 ];
 
 /**
@@ -37,27 +39,30 @@ function rankOccasions(preferences, currentCity) {
 
     // Day of week adjustments
     if (isWeekend) {
-      if (['Weekend Plans', 'Date Night', 'Live Music Tonight', 'Birthday Plans', 'Friends Hangout'].includes(occ)) {
+      if (['Weekend Plans', 'Date Night', 'Live Music Tonight', 'Romantic Evening', 'Friends Night Out'].includes(occ)) {
         scoreMap[occ] += 30;
       }
     } else {
       // Weekdays
-      if (['After Office Escape', 'Under 2 Hours', 'Need a Laugh', 'Under ₹500'].includes(occ)) {
+      if (['Office Break', 'Solo Escape', 'Comedy Evening', 'Budget Plans'].includes(occ)) {
         scoreMap[occ] += 30;
       }
     }
 
     // User interest adjustments
-    if (favoriteCategories.includes('comedy') && occ === 'Need a Laugh') {
+    if (favoriteCategories.includes('comedy') && occ === 'Comedy Evening') {
       scoreMap[occ] += 25;
     }
     if (favoriteCategories.includes('concerts') && occ === 'Live Music Tonight') {
       scoreMap[occ] += 25;
     }
-    if (favoriteCategories.includes('movies') && occ === 'For You') {
+    if (favoriteCategories.includes('movies') && ['Date Night', 'Romantic Evening'].includes(occ)) {
       scoreMap[occ] += 20;
     }
-    if (budgetLimit <= 500 && occ === 'Under ₹500') {
+    if (favoriteCategories.includes('sports') && occ === 'Sports Fan Picks') {
+      scoreMap[occ] += 30;
+    }
+    if (budgetLimit <= 500 && occ === 'Budget Plans') {
       scoreMap[occ] += 25;
     }
   });
@@ -109,76 +114,85 @@ export async function getOccasionCollections(req, res) {
 
       // Filter events matching the occasion logic
       switch (occasion) {
-        case 'For You':
-          // Match favorite categories or high rating
-          filteredEvents = cityEvents.filter(e => 
-            preferences.favorite_categories?.includes(e.category_id) || e.rating >= 8.5
-          );
+        case 'Weekend Plans':
+          // Prioritize weekend dates
+          filteredEvents = cityEvents;
           break;
         case 'Date Night':
-          // Movies, concerts, plays, evening times
+          // Movies, concerts, plays, evening times, exclude horror
           filteredEvents = cityEvents.filter(e => 
             ['movies', 'concerts', 'plays'].includes(e.category_id) && 
             !e.genre?.toLowerCase().includes('horror')
           );
           break;
-        case 'Weekend Plans':
-          // Everything goes, prioritized by weekend dates if available
-          filteredEvents = cityEvents;
-          break;
-        case 'Need a Laugh':
+        case 'Family Time':
+          // Exclude horror/thriller, target movies, plays, activities
           filteredEvents = cityEvents.filter(e => 
-            e.category_id === 'comedy' || e.genre?.toLowerCase().includes('comedy')
+            !e.genre?.toLowerCase().includes('horror') && 
+            !e.genre?.toLowerCase().includes('thriller') &&
+            ['movies', 'plays', 'activities'].includes(e.category_id)
           );
           break;
-        case 'Live Music Tonight':
-          filteredEvents = cityEvents.filter(e => 
-            e.category_id === 'concerts' || e.genre?.toLowerCase().includes('music')
-          );
-          break;
-        case 'Under ₹500':
-          filteredEvents = cityEvents.filter(e => Number(e.price) <= 500);
-          break;
-        case 'Under 2 Hours':
-          filteredEvents = cityEvents.filter(e => e.duration_mins && e.duration_mins <= 120);
-          break;
-        case 'Trending Near You':
-          filteredEvents = cityEvents.filter(e => e.is_trending === true);
-          break;
-        case 'Friends Hangout':
+        case 'Friends Night Out':
           filteredEvents = cityEvents.filter(e => 
             ['comedy', 'sports', 'activities'].includes(e.category_id)
           );
           break;
-        case 'Family Night':
-          // Exclude horror, target G-rated movies, activities, plays
+        case 'Solo Escape':
           filteredEvents = cityEvents.filter(e => 
-            !e.genre?.toLowerCase().includes('horror') && 
-            ['movies', 'plays', 'activities'].includes(e.category_id)
+            ['activities', 'plays', 'movies'].includes(e.category_id)
           );
           break;
-        case 'After Office Escape':
-          // Evening events
+        case 'Office Break':
+          // Evening events starting at or after 4 PM (16:00)
           filteredEvents = cityEvents.filter(e => {
             const hour = parseInt(e.event_time?.split(':')[0] || '18');
             return hour >= 16;
           });
           break;
+        case 'Live Music Tonight':
+          filteredEvents = cityEvents.filter(e => 
+            e.category_id === 'concerts' || e.genre?.toLowerCase().includes('music') || e.genre?.toLowerCase().includes('pop')
+          );
+          break;
+        case 'Comedy Evening':
+          filteredEvents = cityEvents.filter(e => 
+            e.category_id === 'comedy' || e.genre?.toLowerCase().includes('comedy')
+          );
+          break;
+        case 'Budget Plans':
+          filteredEvents = cityEvents.filter(e => Number(e.price) <= 500);
+          break;
+        case 'Luxury Experiences':
+          filteredEvents = cityEvents.filter(e => Number(e.price) >= 1200 || e.category_id === 'concerts');
+          break;
         case 'Rainy Day Picks':
-          // Indoor categories: movies, comedy, plays, activities (workshops, gaming)
-          filteredEvents = cityEvents.filter(e => e.category_id !== 'sports');
+          // Indoor categories only
+          filteredEvents = cityEvents.filter(e => e.category_id !== 'sports' && !e.genre?.toLowerCase().includes('cycling'));
           break;
-        case 'Birthday Plans':
-          // Premium price tags or music concerts
-          filteredEvents = cityEvents.filter(e => Number(e.price) >= 800 || e.category_id === 'concerts');
-          break;
-        case 'Kids Friendly':
-          // Workshops or movies
+        case 'Kids Activities':
           filteredEvents = cityEvents.filter(e => 
             ['activities', 'movies'].includes(e.category_id) && 
             !e.genre?.toLowerCase().includes('horror') && 
             !e.genre?.toLowerCase().includes('thriller')
           );
+          break;
+        case 'Sports Fan Picks':
+          filteredEvents = cityEvents.filter(e => e.category_id === 'sports');
+          break;
+        case 'Romantic Evening':
+          filteredEvents = cityEvents.filter(e => 
+            (['movies', 'concerts', 'plays'].includes(e.category_id) && e.genre?.toLowerCase().includes('romance')) ||
+            (e.category_id === 'concerts' && Number(e.price) >= 900)
+          );
+          break;
+        case 'Festival Specials':
+          filteredEvents = cityEvents.filter(e => 
+            ['plays', 'concerts'].includes(e.category_id) || e.genre?.toLowerCase().includes('musical')
+          );
+          break;
+        case 'Trending Near You':
+          filteredEvents = cityEvents.filter(e => e.is_trending === true);
           break;
       }
 
@@ -201,14 +215,16 @@ export async function getOccasionCollections(req, res) {
         const budgetLimit = Number(preferences.budget_preference) || 1000;
         
         let localDesc = 'Specially selected local matches.';
-        if (occasion === 'Under ₹500') localDesc = 'Budget-friendly entertainment that keeps wallet happy.';
-        if (occasion === 'Under 2 Hours') localDesc = 'Short, action-packed events perfect for a quick escape.';
-        if (occasion === 'Need a Laugh') localDesc = 'Guaranteed laughter from the best standup talent.';
+        if (occasion === 'Budget Plans') localDesc = 'Budget-friendly entertainment that keeps your wallet happy.';
+        if (occasion === 'Comedy Evening') localDesc = 'Guaranteed laughter from the best standup talent.';
         if (occasion === 'Trending Near You') localDesc = 'Popular events making headlines in the city.';
         if (occasion === 'Live Music Tonight') localDesc = 'Awesome concerts and melodies to brighten your evening.';
-        if (occasion === 'Family Night') localDesc = 'Wholesome family events loved by both kids and adults.';
+        if (occasion === 'Family Time') localDesc = 'Wholesome family events loved by both kids and adults.';
         if (occasion === 'Rainy Day Picks') localDesc = 'Top cozy indoor choices for a rainy day.';
-        if (occasion === 'Kids Friendly') localDesc = 'Educational and entertaining workshops and movies.';
+        if (occasion === 'Kids Activities') localDesc = 'Educational and entertaining workshops and movies.';
+        if (occasion === 'Romantic Evening') localDesc = 'Magical candlelight events and movies for two.';
+        if (occasion === 'Sports Fan Picks') localDesc = 'High-octane stadium action and derby matches.';
+        if (occasion === 'Luxury Experiences') localDesc = 'Premium VIP seating shows and elite theatrical events.';
 
         const matches = displayEvents.map(event => {
           let score = 55;

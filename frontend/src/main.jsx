@@ -5,6 +5,7 @@ import './index.css';
 import axios from 'axios';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Set global Axios Base URL for deployments (e.g. Render backend)
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'https://bookmyshow-atc1.onrender.com';
@@ -15,15 +16,17 @@ import { BookingProvider } from './context/BookingContext';
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ToastProvider>
-      <AuthProvider>
-        <PreferencesProvider>
-          <CompareProvider>
-            <BookingProvider>
-              <App />
-            </BookingProvider>
-          </CompareProvider>
-        </PreferencesProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <PreferencesProvider>
+            <CompareProvider>
+              <BookingProvider>
+                <App />
+              </BookingProvider>
+            </CompareProvider>
+          </PreferencesProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </ToastProvider>
   </React.StrictMode>
 );

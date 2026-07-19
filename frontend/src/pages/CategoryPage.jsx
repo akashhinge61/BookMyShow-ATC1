@@ -73,25 +73,25 @@ export default function CategoryPage({ categoryId }) {
   }, [categoryId]);
 
   return (
-    <div className="bg-[#0B0C0E] min-h-screen text-white py-8">
-      <div className="max-w-6xl mx-auto px-4">
+    <div className="bg-white dark:bg-[#0B0C0E] min-h-screen text-gray-900 dark:text-white py-8 transition-colors duration-200">
+      <div className="max-w-7xl mx-auto px-4">
         
         {/* Page Header */}
-        <div className="border-b border-gray-800 pb-4 mb-6">
-          <h1 className="text-xl md:text-3xl font-extrabold text-white flex items-center gap-2">
+        <div className="border-b border-gray-200 dark:border-gray-800 pb-4 mb-6">
+          <h1 className="text-xl md:text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
             Explore {categoryNames[categoryId]} in {preferredCity}
           </h1>
-          <p className="text-xs text-gray-400 mt-1">Discover top-rated entertainment curated for you.</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-semibold">Discover top-rated entertainment curated for you.</p>
         </div>
 
         {/* Layout Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
           {/* Filters Sidebar */}
-          <div className="space-y-6 lg:sticky lg:top-24 h-fit bg-[#15171B] border border-gray-800 p-5 rounded-xl">
-            <div className="flex items-center gap-2 pb-3 border-b border-gray-800">
+          <div className="space-y-6 lg:sticky lg:top-24 h-fit bg-gray-50 dark:bg-[#15171B] border border-gray-200 dark:border-gray-800 p-5 rounded-xl shadow-md">
+            <div className="flex items-center gap-2 pb-3 border-b border-gray-200 dark:border-gray-800">
               <SlidersHorizontal className="w-4 h-4 text-brand" />
-              <h4 className="text-sm font-bold text-white uppercase">Filters</h4>
+              <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Filters</h4>
             </div>
 
             {/* Genre Filter */}
@@ -100,7 +100,7 @@ export default function CategoryPage({ categoryId }) {
               <select
                 value={selectedGenre}
                 onChange={(e) => setSelectedGenre(e.target.value)}
-                className="w-full bg-[#202227] text-xs text-gray-200 rounded border border-gray-800 p-2 focus:outline-none"
+                className="w-full bg-white dark:bg-[#202227] text-xs text-gray-800 dark:text-gray-250 rounded border border-gray-200 dark:border-gray-800 p-2.5 focus:outline-none focus:ring-1 focus:ring-brand font-bold cursor-pointer"
               >
                 <option value="">All Genres</option>
                 {genres.map(g => (
@@ -115,7 +115,7 @@ export default function CategoryPage({ categoryId }) {
               <select
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="w-full bg-[#202227] text-xs text-gray-200 rounded border border-gray-800 p-2 focus:outline-none"
+                className="w-full bg-white dark:bg-[#202227] text-xs text-gray-800 dark:text-gray-250 rounded border border-gray-200 dark:border-gray-800 p-2.5 focus:outline-none focus:ring-1 focus:ring-brand font-bold cursor-pointer"
               >
                 <option value="">All Languages</option>
                 {languages.map(l => (
@@ -128,7 +128,7 @@ export default function CategoryPage({ categoryId }) {
             <div className="space-y-2">
               <div className="flex justify-between items-center text-[11px] font-bold uppercase text-gray-400">
                 <span>Max Ticket Price</span>
-                <span className="text-brand">₹{maxBudget}</span>
+                <span className="text-brand font-bold">₹{maxBudget}</span>
               </div>
               <input
                 type="range"
@@ -152,7 +152,7 @@ export default function CategoryPage({ categoryId }) {
                 setSelectedLanguage('');
                 setMaxBudget(1000);
               }}
-              className="w-full bg-gray-800 hover:bg-gray-700 text-xs py-2 rounded font-bold text-gray-300 transition-colors"
+              className="w-full bg-gray-800 hover:bg-gray-700 text-xs py-2.5 rounded-lg font-bold text-gray-300 transition-colors"
             >
               Reset Filters
             </button>

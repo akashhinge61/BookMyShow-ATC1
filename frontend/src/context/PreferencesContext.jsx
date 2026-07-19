@@ -76,7 +76,8 @@ export function PreferencesProvider({ children }) {
       preferredLanguages: preferences.preferred_languages,
       preferredCities: updatedCities,
       budgetPreference: preferences.budget_preference,
-      timePreference: preferences.time_preference
+      timePreference: preferences.time_preference,
+      additionalPreferences: preferences.additional_preferences || {}
     });
   };
 
