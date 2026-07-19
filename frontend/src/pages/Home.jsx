@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Sparkles, Heart, Calendar, ArrowRight, Flame, Film, Laugh, Music, Trophy, Coins, Clock, Users, Home as HomeIcon, Moon, CloudRain, Gift, Baby, ChevronRight, Award, Percent } from 'lucide-react';
+import { Sparkles, Heart, Calendar, ArrowRight, Flame, Film, Laugh, Music, Trophy, Coins, Clock, Users, Home as HomeIcon, Moon, CloudRain, Gift, Baby, ChevronRight, Award, Percent, MapPin } from 'lucide-react';
 import { usePreferences } from '../context/PreferencesContext';
 import { useAuth } from '../context/AuthContext';
 import EventCard from '../components/EventCard';
