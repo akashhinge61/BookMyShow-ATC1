@@ -1,0 +1,11 @@
+[build]
+  # Tell Netlify to build the frontend subdirectory
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+# Set up redirects for single-page applications (React Router)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
