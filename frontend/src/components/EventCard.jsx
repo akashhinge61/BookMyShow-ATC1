@@ -36,7 +36,7 @@ export default function EventCard({ event }) {
   return (
     <div className="group flex-shrink-0 w-44 md:w-52 bg-[#15171B] rounded-xl overflow-hidden border border-gray-800 hover:border-brand/40 transition-all duration-300 shadow-lg flex flex-col relative">
       
-      {/* Compare Corner Toggle Pin */}
+      {/* Smart Compare Toggle Pin */}
       <button
         onClick={handleCompareToggle}
         className={`absolute top-2 right-2 z-10 p-1.5 rounded-full shadow-md backdrop-blur-md transition-all duration-200 border ${
@@ -44,7 +44,7 @@ export default function EventCard({ event }) {
             ? 'bg-brand text-white border-brand scale-110' 
             : 'bg-black/60 text-gray-300 border-white/10 hover:bg-black/80 hover:text-white'
         }`}
-        title={comparing ? "Remove from Compare Corner" : "Add to Compare Corner"}
+        title={comparing ? "Remove from Smart Compare" : "Add to Smart Compare"}
       >
         {comparing ? <Check className="w-3.5 h-3.5" /> : <GitCompare className="w-3.5 h-3.5" />}
       </button>

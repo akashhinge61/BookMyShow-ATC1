@@ -15,7 +15,7 @@ Instead of showing static grids of movies, concerts, or standup gigs in isolatio
 *   If a `GEMINI_API_KEY` is provided, the backend formats a request combining user profile preferences (languages, category tags, budget limits) and show parameters, asking Gemini to select matching events, write a witty explanation tagline, and score the match.
 *   If the Gemini API key is missing or fails (due to rate-limiting), a smart, localized rule-based fallback system takes over, executing instant priority matches and scoring heuristic tags (language, price match, budget constraints) to keep the layout running smoothly with personalized match badges.
 
-### 2. Cross-Category Compare Corner
+### 2. Cross-Category Smart Compare
 Available throughout the app. Checkboxes on every event card and detail page allow users to select up to 3 events across *any* category (e.g., compare a Movie, a Standup Comedy Show, and an Escape Room Activity side-by-side).
 *   Opens a side-by-side matrix page comparing Match %, Price, Duration, Venue details, Ratings, Language, "Best For" target audience, Pros, Cons, and a complete AI Recommendation Summary concluding with the absolute best choice and explanation reasoning.
 

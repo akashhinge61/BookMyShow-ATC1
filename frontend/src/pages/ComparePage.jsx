@@ -51,7 +51,7 @@ export default function ComparePage() {
             <GitCompare className="w-8 h-8" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-bold">Compare Corner is Empty</h3>
+            <h3 className="text-lg font-bold">Smart Compare is Empty</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold leading-relaxed">
               Please add at least 2 events (up to 5) to compare them side-by-side. Use the compare pins on show cards.
             </p>
@@ -76,7 +76,7 @@ export default function ComparePage() {
           <div>
             <h1 className="text-xl md:text-3xl font-extrabold flex items-center gap-2 font-sans">
               <GitCompare className="w-7 h-7 text-brand" />
-              Compare Corner
+              Smart Compare
             </h1>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Cross-category comparison matrix for up to 5 events powered by Gemini AI.</p>
           </div>

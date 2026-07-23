@@ -13,7 +13,7 @@ router.get('/categories', getCategories);
 router.get('/events', getEvents);
 router.get('/events/:id', getEventById);
 
-// AI Discover & Compare Corner routes
+// AI Discover & Smart Compare routes
 router.get('/ai/collections', getOccasionCollections);
 router.post('/ai/compare', compareEvents);
 

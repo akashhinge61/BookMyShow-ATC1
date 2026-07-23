@@ -481,7 +481,7 @@ export default function EventDetail() {
                     ? 'bg-brand/10 border-brand/50 text-brand font-bold'
                     : 'bg-white dark:bg-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800'
                 }`}
-                title="Compare Corner"
+                title="Smart Compare"
               >
                 <GitCompare className="w-4 h-4" />
                 <span>Compare</span>

@@ -20,7 +20,7 @@ export default function CompareCornerDrawer() {
           </div>
           <div>
             <h5 className="text-sm font-bold text-white flex items-center gap-1.5 font-sans">
-              Compare Corner 
+              Smart Compare 
               <span className="bg-brand/20 text-brand text-xs font-semibold px-2 py-0.5 rounded-full">
                 {compareList.length}/5 selected
               </span>

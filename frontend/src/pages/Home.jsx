@@ -241,7 +241,7 @@ export default function Home() {
               <div>
                 <h3 className="text-md md:text-xl font-black text-gray-900 dark:text-white flex items-center gap-2 font-sans uppercase tracking-tight">
                   <Sparkles className="w-5 h-5 text-brand animate-pulse" />
-                  AI Personalization Hub
+                  Plans for you
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Select an occasion category below to preview your top-curated recommendations.</p>
               </div>

@@ -273,7 +273,7 @@ export async function getOccasionCollections(req, res) {
   }
 }
 
-// Side-by-side Compare Corner endpoint
+// Side-by-side Smart Compare endpoint
 export async function compareEvents(req, res) {
   try {
     const { eventIds } = req.body; // Array of integers

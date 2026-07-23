@@ -10,7 +10,7 @@ export function CompareProvider({ children }) {
   const addToCompare = (event) => {
     // Check if already in list
     if (compareList.some(item => item.id === event.id)) {
-      addToast('Event is already added to Compare Corner', 'info');
+      addToast('Event is already added to Smart Compare', 'info');
       return;
     }
 
@@ -21,20 +21,20 @@ export function CompareProvider({ children }) {
     }
 
     setCompareList(prev => [...prev, event]);
-    addToast(`Added "${event.title}" to Compare Corner!`, 'success');
+    addToast(`Added "${event.title}" to Smart Compare!`, 'success');
   };
 
   const removeFromCompare = (eventId) => {
     const item = compareList.find(i => i.id === eventId);
     setCompareList(prev => prev.filter(item => item.id !== eventId));
     if (item) {
-      addToast(`Removed "${item.title}" from Compare Corner`, 'info');
+      addToast(`Removed "${item.title}" from Smart Compare`, 'info');
     }
   };
 
   const clearCompare = () => {
     setCompareList([]);
-    addToast('Compare Corner cleared', 'info');
+    addToast('Smart Compare cleared', 'info');
   };
 
   const isComparing = (eventId) => {
