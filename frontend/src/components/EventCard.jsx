@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Star, GitCompare, Check } from 'lucide-react';
 import { useCompare } from '../context/CompareContext';
+import ImageWithFallback from './ImageWithFallback';
 
 export default function EventCard({ event }) {
   const { addToCompare, removeFromCompare, isComparing } = useCompare();
@@ -61,9 +62,12 @@ export default function EventCard({ event }) {
       <Link to={`/events/${event.id}`} className="flex-1 flex flex-col">
         {/* Poster Wrapper */}
         <div className="relative h-64 md:h-72 overflow-hidden bg-gray-900">
-          <img
+          <ImageWithFallback
             src={event.poster_url}
             alt={event.title}
+            category={event.category_id}
+            title={event.title}
+            type="poster"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
             loading="lazy"
           />

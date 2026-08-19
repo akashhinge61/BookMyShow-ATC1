@@ -8,7 +8,7 @@ import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider } from './context/ThemeContext';
 
 // Set global Axios Base URL for deployments (e.g. Render backend)
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'https://bookmyshow-atc1.onrender.com';
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? '' : 'https://bookmyshow-atc1.onrender.com');
 import { PreferencesProvider } from './context/PreferencesContext';
 import { CompareProvider } from './context/CompareContext';
 import { BookingProvider } from './context/BookingContext';

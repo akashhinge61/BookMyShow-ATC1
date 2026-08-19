@@ -5,6 +5,7 @@ import { GitCompare, Sparkles, Plus, Trash2, ArrowRight, ShieldCheck, HelpCircle
 import { useCompare } from '../context/CompareContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 export default function ComparePage() {
   const { compareList, removeFromCompare, clearCompare } = useCompare();
@@ -138,7 +139,14 @@ export default function ComparePage() {
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                         <div className="flex flex-col items-center text-center gap-2 pt-3">
-                          <img src={e.poster_url} alt={e.title} className="w-14 h-20 rounded-lg object-cover shadow border border-gray-200 dark:border-gray-800" />
+                          <ImageWithFallback
+                            src={e.poster_url}
+                            alt={e.title}
+                            category={e.category_id}
+                            title={e.title}
+                            type="poster"
+                            className="w-14 h-20 rounded-lg object-cover shadow border border-gray-200 dark:border-gray-800"
+                          />
                           <span className="line-clamp-2 block text-xs font-black leading-snug tracking-tight text-gray-900 dark:text-white mt-1">{e.title}</span>
                         </div>
                       </th>

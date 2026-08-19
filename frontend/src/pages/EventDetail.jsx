@@ -7,6 +7,7 @@ import { useCompare } from '../context/CompareContext';
 import { useBooking } from '../context/BookingContext';
 import { useToast } from '../context/ToastContext';
 import { DetailSkeleton } from '../components/SkeletonLoader';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -144,9 +145,12 @@ export default function EventDetail() {
       {/* 1. Large Hero Banner Backdrop */}
       <div className="relative h-64 md:h-[400px] overflow-hidden bg-black select-none">
         <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#0B0C0E] via-black/85 to-black/35 z-10" />
-        <img
+        <ImageWithFallback
           src={event.banner_url || event.poster_url}
           alt={event.title}
+          category={event.category_id}
+          title={event.title}
+          type="banner"
           className="w-full h-full object-cover object-center filter blur-md scale-105 opacity-55"
         />
         
@@ -154,7 +158,14 @@ export default function EventDetail() {
         <div className="absolute inset-0 max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-end gap-8 z-20 pb-8">
           {/* Floating Poster */}
           <div className="w-36 md:w-56 h-52 md:h-80 rounded-xl overflow-hidden shadow-2xl border border-gray-800 flex-shrink-0 hidden sm:block">
-            <img src={event.poster_url} alt={event.title} className="w-full h-full object-cover" />
+            <ImageWithFallback
+              src={event.poster_url}
+              alt={event.title}
+              category={event.category_id}
+              title={event.title}
+              type="poster"
+              className="w-full h-full object-cover"
+            />
           </div>
 
           {/* Details Row */}
@@ -281,7 +292,14 @@ export default function EventDetail() {
                   const inCompare = isComparing(sim.id);
                   return (
                     <div key={sim.id} className="bg-white dark:bg-[#202227]/40 border border-gray-200 dark:border-gray-800 p-2.5 rounded-xl flex flex-col justify-between items-center text-center space-y-2.5 shadow-sm">
-                      <img src={sim.poster_url} alt={sim.title} className="w-12 h-16 object-cover rounded shadow" />
+                      <ImageWithFallback
+                        src={sim.poster_url}
+                        alt={sim.title}
+                        category={sim.category_id}
+                        title={sim.title}
+                        type="poster"
+                        className="w-12 h-16 object-cover rounded shadow"
+                      />
                       <h5 className="text-[10px] font-bold text-gray-800 dark:text-gray-200 line-clamp-1 w-full">{sim.title}</h5>
                       <button
                         onClick={() => inCompare ? removeFromCompare(sim.id) : addToCompare(sim)}

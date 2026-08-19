@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GitCompare, X, Trash2 } from 'lucide-react';
 import { useCompare } from '../context/CompareContext';
+import ImageWithFallback from './ImageWithFallback';
 
 export default function CompareCornerDrawer() {
   const { compareList, removeFromCompare, clearCompare } = useCompare();
@@ -36,9 +37,12 @@ export default function CompareCornerDrawer() {
               key={event.id}
               className="relative w-12 h-16 rounded border border-gray-700 bg-gray-900 group shadow-md"
             >
-              <img 
+              <ImageWithFallback 
                 src={event.poster_url} 
                 alt={event.title}
+                category={event.category_id}
+                title={event.title}
+                type="poster"
                 className="w-full h-full object-cover rounded"
               />
               <button

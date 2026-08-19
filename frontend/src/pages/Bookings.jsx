@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Ticket, Calendar, Clock, MapPin, XCircle, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 export default function Bookings() {
   const { user } = useAuth();
@@ -113,9 +114,12 @@ export default function Bookings() {
                       <div className="flex gap-4 items-start">
                         {/* Event Thumbnail */}
                         {ticket.poster_url && (
-                          <img 
+                          <ImageWithFallback 
                             src={ticket.poster_url} 
                             alt={ticket.event_title} 
+                            category={ticket.category_id}
+                            title={ticket.event_title}
+                            type="poster"
                             className="w-14 h-20 object-cover rounded shadow border border-gray-800 flex-shrink-0"
                           />
                         )}

@@ -5,6 +5,7 @@ import { Ticket, CreditCard, Armchair, ChevronRight, CheckCircle2, QrCode, Spark
 import { useBooking } from '../context/BookingContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 export default function BookingFlow() {
   const { user } = useAuth();
@@ -269,7 +270,14 @@ export default function BookingFlow() {
 
             {/* Ticket Info */}
             <div className="flex items-start gap-4">
-              <img src={bookingEvent.poster_url} alt={bookingEvent.title} className="w-14 h-20 object-cover rounded border border-gray-800" />
+              <ImageWithFallback 
+                src={bookingEvent.poster_url} 
+                alt={bookingEvent.title} 
+                category={bookingEvent.category_id}
+                title={bookingEvent.title}
+                type="poster"
+                className="w-14 h-20 object-cover rounded border border-gray-800" 
+              />
               <div className="space-y-1 text-xs">
                 <h4 className="font-bold text-white text-sm">{bookingEvent.title}</h4>
                 <p className="text-gray-400">{bookingEvent.venue_name}</p>
